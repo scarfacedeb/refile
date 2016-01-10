@@ -177,6 +177,17 @@ describe Refile::ActiveRecord::Attachment do
       expect(Refile.store.read(post.document.id)).to eq("hello")
       expect(post.document.id).not_to be eq old_document.id
     end
+
+    it "closes opened cache files" do
+      before_files_count = ObjectSpace.each_object(File).reject(&:closed?).select { |f| f.path.include? "cache" }.count
+
+      post = klass.new
+      post.document = Refile::FileDouble.new("hello")
+      post.save
+
+      after_files_count = ObjectSpace.each_object(File).reject(&:closed?).select { |f| f.path.include? "cache" }.count
+      expect(after_files_count).to eq(before_files_count)
+    end
   end
 
   describe "#destroy" do
