@@ -34,9 +34,13 @@ module Refile
       # @return [Refile::File]      The uploaded file
       verify_uploadable def upload(uploadable)
         id = @hasher.hash(uploadable)
-        IO.copy_stream(uploadable, path(id))
+        dest = ::File.open path(id), "wb"
+        IO.copy_stream(uploadable, dest)
 
         Refile::File.new(self, id)
+      ensure
+        uploadable.close
+        dest.close if dest
       end
 
       # Get a file from this backend.
